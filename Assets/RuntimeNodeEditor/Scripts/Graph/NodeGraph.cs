@@ -20,19 +20,21 @@ namespace RuntimeNodeEditor
         public List<Node>           nodes;
         public List<Connection>     connections;
 
-        //  cache
-        private SocketOutput        _currentDraggingSocket;
-        private Vector2             _pointerOffset;
-	    private Vector2             _localPointerPos;
-	    private Vector2             _duplicateOffset;
-        private Vector2             _zoomCenterPos;
-        private float               _currentZoom;
-        private float               _minZoom;
-        private float               _maxZoom;
-        private RectTransform       _nodeContainer;
-	    private RectTransform       _graphContainer;
+		//  cache
+		private SocketOutput        _currentDraggingSocket;
+		private Vector2             _pointerOffset;
+		private Vector2             _localPointerPos;
+		private Vector2             _duplicateOffset;
+		private Vector2             _zoomCenterPos;
+		private float               _currentZoom;
+		private float               _minZoom;
+		private float               _maxZoom;
+		private RectTransform       _nodeContainer;
+		private RectTransform       _graphContainer;
 
-        private SignalSystem        _signalSystem;
+		private SignalSystem        _signalSystem;
+
+		public float mouseMiddleButtomScaleFrameSpeed = 0.05f;
 
         public void Init(SignalSystem signalSystem, float minZoom, float maxZoom)
         {
@@ -352,35 +354,38 @@ namespace RuntimeNodeEditor
             DragNode(node, eventData);
         }
 
-        protected virtual void OnGraphPointerScrolled(PointerEventData eventData)
-        {
-            if (Mathf.Abs(eventData.scrollDelta.y) > float.Epsilon)
-            {
-                _currentZoom    *= 1f + eventData.scrollDelta.y;
-	            _currentZoom    = Mathf.Clamp(_currentZoom, _minZoom, _maxZoom);
-	            _zoomCenterPos  = Utility.GetMousePosition();
+		//lastdream [debug]AI调整 让缩小操作与放大帧距离一致
+		protected virtual void OnGraphPointerScrolled(PointerEventData eventData)
+		{
+			float zoomAmount = Mathf.Abs(eventData.scrollDelta.y) * mouseMiddleButtomScaleFrameSpeed; // 设置一个统一的缩放距离
 
-                Vector2 beforePointInContent;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(_graphContainer, _zoomCenterPos, null, out beforePointInContent);
+			if (Mathf.Abs(eventData.scrollDelta.y) > float.Epsilon)
+			{
+				_currentZoom    *= 1f + Mathf.Sign(eventData.scrollDelta.y) * zoomAmount; // 根据符号和缩放距离调整缩放值
+				_currentZoom    = Mathf.Clamp(_currentZoom, _minZoom, _maxZoom);
+				_zoomCenterPos  = Utility.GetMousePosition();
 
-                Vector2 pivotPosition = new Vector3(_graphContainer.pivot.x * _graphContainer.rect.size.x, _graphContainer.pivot.y * _graphContainer.rect.size.y);
-                Vector2 posFromBottomLeft = pivotPosition + beforePointInContent;
-                SetPivot(_graphContainer, new Vector2(posFromBottomLeft.x / _graphContainer.rect.width, posFromBottomLeft.y / _graphContainer.rect.height));
+				Vector2 beforePointInContent;
+				RectTransformUtility.ScreenPointToLocalPointInRectangle(_graphContainer, _zoomCenterPos, null, out beforePointInContent);
 
-                if (Mathf.Abs(_graphContainer.localScale.x - _currentZoom) > 0.001f)
-                {
-                    _graphContainer.localScale = Vector3.one * _currentZoom;
-                }
-            }
-        }
+				Vector2 pivotPosition = new Vector3(_graphContainer.pivot.x * _graphContainer.rect.size.x, _graphContainer.pivot.y * _graphContainer.rect.size.y);
+				Vector2 posFromBottomLeft = pivotPosition + beforePointInContent;
+				SetPivot(_graphContainer, new Vector2(posFromBottomLeft.x / _graphContainer.rect.width, posFromBottomLeft.y / _graphContainer.rect.height));
 
-        protected virtual void OnGraphPointerDragged(PointerEventData eventData)
-        {
-            if (eventData.button == PointerEventData.InputButton.Middle)
-            {
-                _graphContainer.localPosition += new Vector3(eventData.delta.x, eventData.delta.y);
-            }
-        }
+				if (Mathf.Abs(_graphContainer.localScale.x - _currentZoom) > 0.001f)
+				{
+					_graphContainer.localScale = Vector3.one * _currentZoom;
+				}
+			}
+		}
+
+		protected virtual void OnGraphPointerDragged(PointerEventData eventData)
+		{
+			if (eventData.button == PointerEventData.InputButton.Left)
+			{
+				_graphContainer.localPosition += new Vector3(eventData.delta.x, eventData.delta.y);
+			}
+		}
 
 
         //  helper methods
