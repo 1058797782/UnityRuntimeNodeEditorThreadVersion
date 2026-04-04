@@ -152,7 +152,7 @@ namespace RuntimeNodeEditor
             //linerenderer.BezierMode = UILineRenderer.BezierType.Catenary;//Improved 使用递归细分算法，适合复杂曲线；Catenary 适合模拟自然垂线（如绳索）。
             //linerenderer.sprite = _lineStyle;
             //LD: 替换为额外增加的软毛边线条纹理，避免严重的锯齿感
-            linerenderer.sprite         = Resources.Load<Sprite>("Nodes/line1"); // AI: 加载 line1 sprite，通过 sprite 柔和边缘修复线条锯齿（齿距）问题
+            linerenderer.sprite         = Resources.Load<Sprite>("line1Fix"); // AI: 加载 line1 sprite，通过 sprite 柔和边缘修复线条锯齿（齿距）问题
 
             return linerenderer;
         }
